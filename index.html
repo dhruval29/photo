@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Flipbook</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="flipbook-wrapper">
+            <div id="flipbook" class="flipbook"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" class="control-btn" aria-label="Previous page">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="14 18 8 12 14 6"></polyline>
+                </svg>
+            </button>
+            
+            <div id="pageCounter" class="page-counter">1 / 1</div>
+            
+            <button id="nextBtn" class="control-btn" aria-label="Next page">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="10 18 16 12 10 6"></polyline>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
