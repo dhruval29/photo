@@ -58,6 +58,8 @@ class PhotoFlipbook {
         this.pageFlip = null;
         this.currentPage = 0;
         this.isInitialized = false;
+        this.loadedImages = 0;
+        this.totalImages = photos.length;
         
         this.init();
     }
@@ -65,9 +67,70 @@ class PhotoFlipbook {
     init() {
         // Wait for DOM and library to be ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.setup());
+            document.addEventListener('DOMContentLoaded', () => this.preloadImages());
         } else {
-            this.setup();
+            this.preloadImages();
+        }
+    }
+
+    async preloadImages() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingProgress = document.querySelector('.loading-progress');
+        
+        try {
+            // Preload images with progress tracking
+            const imagePromises = this.photos.map((photo, index) => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        this.loadedImages++;
+                        const progress = Math.round((this.loadedImages / this.totalImages) * 100);
+                        if (loadingProgress) {
+                            loadingProgress.textContent = `${progress}%`;
+                        }
+                        resolve();
+                    };
+                    
+                    img.onerror = () => {
+                        console.warn(`Failed to load image: ${photo.url}`);
+                        this.loadedImages++;
+                        const progress = Math.round((this.loadedImages / this.totalImages) * 100);
+                        if (loadingProgress) {
+                            loadingProgress.textContent = `${progress}%`;
+                        }
+                        resolve(); // Continue even if image fails
+                    };
+                    
+                    // Set timeout for slow loading images
+                    setTimeout(() => {
+                        if (!img.complete) {
+                            console.warn(`Image loading timeout: ${photo.url}`);
+                            resolve();
+                        }
+                    }, 10000); // 10 second timeout per image
+                    
+                    img.src = photo.url;
+                });
+            });
+
+            // Wait for all images (or timeouts)
+            await Promise.all(imagePromises);
+            
+            // Hide loading screen and setup flipbook
+            setTimeout(() => {
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                }
+                this.setup();
+            }, 300);
+            
+        } catch (error) {
+            console.error('Error preloading images:', error);
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+            this.setup(); // Try to continue anyway
         }
     }
 
@@ -274,9 +337,25 @@ class PhotoFlipbook {
 
     showFallback() {
         const flipbookEl = document.getElementById('flipbook');
+        const loadingScreen = document.getElementById('loadingScreen');
+        
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+        
         flipbookEl.innerHTML = `
             <div class="loading">
-                Unable to load flipbook. Please check that the StPageFlip library is loaded correctly.
+                Unable to load flipbook. Please check your connection and try again.
+                <br><br>
+                <button onclick="location.reload()" style="
+                    padding: 0.5rem 1rem;
+                    background: var(--accent-color);
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                ">Retry</button>
             </div>
         `;
     }
@@ -284,3 +363,16 @@ class PhotoFlipbook {
 
 // Initialize the flipbook
 new PhotoFlipbook(photos);
+
+// Register service worker for offline support and better caching
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered successfully:', registration.scope);
+            })
+            .catch(error => {
+                console.log('Service Worker registration failed:', error);
+            });
+    });
+}

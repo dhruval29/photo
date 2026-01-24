@@ -202,7 +202,65 @@ body {
     transform: translate(-50%, calc(-50% - 2px));
 }
 
-/* Loading state */
+/* Loading Screen */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--shadow-light);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    color: var(--text-color);
+    font-size: 1rem;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+.loading-progress {
+    color: var(--text-color);
+    font-size: 0.875rem;
+    opacity: 0.6;
+    font-weight: 400;
+}
+
+/* Loading state fallback */
 .loading {
     position: absolute;
     top: 50%;

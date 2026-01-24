@@ -13,6 +13,9 @@ A modern, aesthetic photo flipbook for the web with smooth page-turning animatio
 - **Dark Mode**: Automatically adapts to system color scheme preferences
 - **Optional Captions**: Subtle captions that appear on hover
 - **Lightweight**: ~15KB total (excluding images), uses CDN for library
+- **Smart Preloading**: Images preload with progress tracking
+- **Offline Support**: Service worker caching for offline viewing
+- **Production Ready**: Optimized for Vercel deployment
 
 ## Project Structure
 
@@ -28,6 +31,8 @@ final/
 
 ## Quick Start
 
+### Local Development
+
 1. Open `index.html` in a modern browser
 2. Replace the sample photos in `js/app.js` with your own:
 
@@ -42,6 +47,29 @@ const photos = [
 ```
 
 3. That's it! The flipbook will automatically adjust to your images.
+
+### Testing Images
+
+Before deployment, test all images load correctly:
+
+1. Open `test-images.html` in your browser
+2. Check that all images load successfully
+3. Fix any failed images before deploying
+
+### Deploy to Vercel
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+vercel
+
+# Or deploy to production
+vercel --prod
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions and troubleshooting.
 
 ## Customization
 
