@@ -58,8 +58,8 @@ class PhotoFlipbook {
         this.pageFlip = null;
         this.currentPage = 0;
         this.isInitialized = false;
-        this.loadedImages = 0;
-        this.totalImages = photos.length;
+        this.imageCache = new Map(); // Cache for preloaded images
+        this.preloadRange = 3; // Number of pages to preload ahead/behind
         
         this.init();
     }
@@ -67,55 +67,26 @@ class PhotoFlipbook {
     init() {
         // Wait for DOM and library to be ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.preloadImages());
+            document.addEventListener('DOMContentLoaded', () => this.initializeApp());
         } else {
-            this.preloadImages();
+            this.initializeApp();
         }
     }
 
-    async preloadImages() {
+    async initializeApp() {
         const loadingScreen = document.getElementById('loadingScreen');
         const loadingProgress = document.querySelector('.loading-progress');
         
         try {
-            // Preload images with progress tracking
-            const imagePromises = this.photos.map((photo, index) => {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    
-                    img.onload = () => {
-                        this.loadedImages++;
-                        const progress = Math.round((this.loadedImages / this.totalImages) * 100);
-                        if (loadingProgress) {
-                            loadingProgress.textContent = `${progress}%`;
-                        }
-                        resolve();
-                    };
-                    
-                    img.onerror = () => {
-                        console.warn(`Failed to load image: ${photo.url}`);
-                        this.loadedImages++;
-                        const progress = Math.round((this.loadedImages / this.totalImages) * 100);
-                        if (loadingProgress) {
-                            loadingProgress.textContent = `${progress}%`;
-                        }
-                        resolve(); // Continue even if image fails
-                    };
-                    
-                    // Set timeout for slow loading images
-                    setTimeout(() => {
-                        if (!img.complete) {
-                            console.warn(`Image loading timeout: ${photo.url}`);
-                            resolve();
-                        }
-                    }, 10000); // 10 second timeout per image
-                    
-                    img.src = photo.url;
-                });
-            });
-
-            // Wait for all images (or timeouts)
-            await Promise.all(imagePromises);
+            // Only preload the first few images for instant start
+            const initialLoadCount = Math.min(5, this.photos.length);
+            loadingProgress.textContent = 'Loading...';
+            
+            const initialPromises = this.photos.slice(0, initialLoadCount).map((photo, index) => 
+                this.preloadImage(photo.url, index)
+            );
+            
+            await Promise.all(initialPromises);
             
             // Hide loading screen and setup flipbook
             setTimeout(() => {
@@ -123,14 +94,59 @@ class PhotoFlipbook {
                     loadingScreen.classList.add('hidden');
                 }
                 this.setup();
-            }, 300);
+                
+                // Start preloading remaining images in background
+                this.preloadAdjacentPages(0);
+            }, 200);
             
         } catch (error) {
-            console.error('Error preloading images:', error);
+            console.error('Error initializing app:', error);
             if (loadingScreen) {
                 loadingScreen.classList.add('hidden');
             }
-            this.setup(); // Try to continue anyway
+            this.setup();
+        }
+    }
+
+    preloadImage(url, index) {
+        // Return cached promise if already loading/loaded
+        if (this.imageCache.has(index)) {
+            return this.imageCache.get(index);
+        }
+
+        const promise = new Promise((resolve) => {
+            const img = new Image();
+            
+            img.onload = () => resolve({ success: true, index });
+            img.onerror = () => {
+                console.warn(`Failed to load image: ${url}`);
+                resolve({ success: false, index });
+            };
+            
+            // Timeout for slow images
+            setTimeout(() => {
+                if (!img.complete) {
+                    console.warn(`Image loading timeout: ${url}`);
+                    resolve({ success: false, index });
+                }
+            }, 8000);
+            
+            img.src = url;
+        });
+
+        this.imageCache.set(index, promise);
+        return promise;
+    }
+
+    preloadAdjacentPages(currentIndex) {
+        // Preload current page and adjacent pages within range
+        const start = Math.max(0, currentIndex - this.preloadRange);
+        const end = Math.min(this.photos.length - 1, currentIndex + this.preloadRange);
+        
+        for (let i = start; i <= end; i++) {
+            if (!this.imageCache.has(i)) {
+                this.preloadImage(this.photos[i].url, i);
+            }
         }
     }
 
@@ -154,9 +170,11 @@ class PhotoFlipbook {
         this.photos.forEach((photo, index) => {
             const pageDiv = document.createElement('div');
             pageDiv.className = 'page';
+            // Use eager loading for first 5 images, lazy for rest
+            const loadingStrategy = index < 5 ? 'eager' : 'lazy';
             pageDiv.innerHTML = `
                 <div class="page-content">
-                    <img src="${photo.url}" alt="${photo.caption || `Photo ${index + 1}`}" class="page-image" loading="lazy">
+                    <img src="${photo.url}" alt="${photo.caption || `Photo ${index + 1}`}" class="page-image" loading="${loadingStrategy}">
                     ${photo.caption ? `<div class="page-caption">${photo.caption}</div>` : ''}
                 </div>
             `;
@@ -269,6 +287,9 @@ class PhotoFlipbook {
         this.updatePageCounter();
         this.updateButtons();
         this.updateBookPosition();
+        
+        // Preload adjacent pages as user navigates
+        this.preloadAdjacentPages(this.currentPage);
     }
 
     updateBookPosition() {
