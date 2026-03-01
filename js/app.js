@@ -390,6 +390,34 @@ class PhotoFlipbook {
 // Initialize the flipbook
 new PhotoFlipbook(photos);
 
+// First-visit controls intro
+(function () {
+    const overlay = document.getElementById('introOverlay');
+    const dismissBtn = document.getElementById('introDismiss');
+    if (!overlay || !dismissBtn) return;
+
+    const SEEN_KEY = 'flipbook_intro_seen';
+
+    function dismiss() {
+        overlay.classList.add('hidden');
+        // After transition completes, remove from DOM so it can't block interactions
+        overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
+        try { localStorage.setItem(SEEN_KEY, '1'); } catch (_) {}
+    }
+
+    // Show only for first-time visitors
+    if (!localStorage.getItem(SEEN_KEY)) {
+        overlay.style.display = 'flex';
+        dismissBtn.addEventListener('click', dismiss);
+        // Also dismiss if they tap outside the card
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) dismiss();
+        });
+    } else {
+        overlay.remove();
+    }
+}());
+
 // Register service worker for offline support and better caching
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

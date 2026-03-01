@@ -24,6 +24,66 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- Portrait mode lock (mobile only) -->
+    <div class="rotate-overlay" aria-hidden="true">
+        <div class="rotate-content">
+            <svg class="rotate-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="22" y="8" width="36" height="56" rx="6" stroke="currentColor" stroke-width="3.5"/>
+                <circle cx="40" cy="54" r="3" fill="currentColor"/>
+                <path d="M52 78 C62 68, 72 55, 72 40" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <polyline points="68,30 72,40 62,43" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <p class="rotate-title">Rotate your device</p>
+            <p class="rotate-sub">This flipbook is designed for landscape mode</p>
+        </div>
+    </div>
+
+    <!-- First-visit controls intro -->
+    <div id="introOverlay" class="intro-overlay" role="dialog" aria-modal="true" aria-label="Controls introduction">
+        <div class="intro-card">
+            <h2 class="intro-heading">How to use</h2>
+            <div class="intro-tips">
+                <div class="intro-tip">
+                    <span class="intro-tip-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Swipe or drag</strong>
+                        <p>Drag a page corner or swipe left / right to turn pages</p>
+                    </div>
+                </div>
+                <div class="intro-tip">
+                    <span class="intro-tip-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="9" width="7" height="9" rx="1.5"/>
+                            <rect x="14" y="9" width="7" height="9" rx="1.5"/>
+                            <path d="M10 13h4"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Arrow buttons</strong>
+                        <p>Use the ‹ › buttons at the bottom to navigate</p>
+                    </div>
+                </div>
+                <div class="intro-tip">
+                    <span class="intro-tip-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="6" width="20" height="14" rx="2"/>
+                            <path d="M8 10l-3 3 3 3M16 10l3 3-3 3"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Keyboard</strong>
+                        <p>Press ← → arrow keys on your keyboard</p>
+                    </div>
+                </div>
+            </div>
+            <button id="introDismiss" class="intro-dismiss">Got it!</button>
+        </div>
+    </div>
+
     <!-- Loading Screen -->
     <div id="loadingScreen" class="loading-screen">
         <div class="loading-content">

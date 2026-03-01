@@ -357,3 +357,189 @@ body {
         display: none;
     }
 }
+
+/* ── Rotate overlay (portrait lock on mobile) ─────────────────────────── */
+.rotate-overlay {
+    display: none; /* hidden by default */
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+    .rotate-overlay {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: var(--bg-color);
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+}
+
+.rotate-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+.rotate-icon {
+    width: 72px;
+    height: 72px;
+    color: var(--accent-color);
+    opacity: 0.85;
+    animation: rotateHint 2.4s ease-in-out infinite;
+}
+
+@keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    40%       { transform: rotate(90deg); }
+    60%       { transform: rotate(90deg); }
+}
+
+.rotate-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.rotate-sub {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    opacity: 0.6;
+    max-width: 240px;
+    line-height: 1.5;
+}
+
+/* ── First-visit controls intro overlay ───────────────────────────────── */
+.intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    display: none; /* shown by JS only for first-time visitors */
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    animation: fadeInOverlay 0.35s ease both;
+}
+
+.intro-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.intro-card {
+    background: var(--control-bg);
+    border-radius: 20px;
+    padding: 2rem 2rem 1.5rem;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUpCard 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+    .intro-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
+@keyframes slideUpCard {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.intro-heading {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: -0.2px;
+}
+
+.intro-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    margin-bottom: 1.75rem;
+}
+
+.intro-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+}
+
+.intro-tip-icon {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(44, 62, 80, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+    .intro-tip-icon {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.intro-tip-icon svg {
+    width: 18px;
+    height: 18px;
+    color: var(--accent-color);
+}
+
+.intro-tip strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.2rem;
+}
+
+.intro-tip p {
+    font-size: 0.8rem;
+    color: var(--text-color);
+    opacity: 0.65;
+    line-height: 1.45;
+}
+
+.intro-dismiss {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+    letter-spacing: 0.2px;
+}
+
+.intro-dismiss:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.intro-dismiss:active {
+    transform: translateY(0);
+    opacity: 1;
+}
