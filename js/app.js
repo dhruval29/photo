@@ -58,14 +58,13 @@ class PhotoFlipbook {
         this.pageFlip = null;
         this.currentPage = 0;
         this.isInitialized = false;
-        this.imageCache = new Map(); // Cache for preloaded images
-        this.preloadRange = 3; // Number of pages to preload ahead/behind
+        this.imageCache = new Map();
+        this.lastFlipDirection = 1; // 1 = forward, -1 = backward
         
         this.init();
     }
 
     init() {
-        // Wait for DOM and library to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.initializeApp());
         } else {
@@ -78,26 +77,24 @@ class PhotoFlipbook {
         const loadingProgress = document.querySelector('.loading-progress');
         
         try {
-            // Only preload the first few images for instant start
-            const initialLoadCount = Math.min(5, this.photos.length);
+            // Wait only for the first 3 images (Cover + 2 inner pages)
+            const initialLoadCount = Math.min(3, this.photos.length);
             loadingProgress.textContent = 'Loading...';
             
-            const initialPromises = this.photos.slice(0, initialLoadCount).map((photo, index) => 
+            const initialPromises = this.photos.slice(0, initialLoadCount).map((photo, index) =>
                 this.preloadImage(photo.url, index)
             );
             
             await Promise.all(initialPromises);
             
-            // Hide loading screen and setup flipbook
-            setTimeout(() => {
-                if (loadingScreen) {
-                    loadingScreen.classList.add('hidden');
-                }
-                this.setup();
-                
-                // Start preloading remaining images in background
-                this.preloadAdjacentPages(0);
-            }, 200);
+            // Show immediately — no artificial delay
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+            this.setup();
+            
+            // Preload next pages in background after UI is shown
+            this.preloadAdjacentPages(0, 1);
             
         } catch (error) {
             console.error('Error initializing app:', error);
@@ -109,39 +106,44 @@ class PhotoFlipbook {
     }
 
     preloadImage(url, index) {
-        // Return cached promise if already loading/loaded
         if (this.imageCache.has(index)) {
             return this.imageCache.get(index);
         }
 
         const promise = new Promise((resolve) => {
             const img = new Image();
-            
-            img.onload = () => resolve({ success: true, index });
-            img.onerror = () => {
-                console.warn(`Failed to load image: ${url}`);
-                resolve({ success: false, index });
-            };
-            
-            // Timeout for slow images
-            setTimeout(() => {
-                if (!img.complete) {
-                    console.warn(`Image loading timeout: ${url}`);
-                    resolve({ success: false, index });
-                }
-            }, 8000);
-            
             img.src = url;
+
+            // Use decode() so image decoding happens off the main thread
+            img.decode()
+                .then(() => resolve({ success: true, index }))
+                .catch(() => {
+                    // decode() can fail if image already loaded or on error; fallback
+                    if (img.complete && img.naturalWidth > 0) {
+                        resolve({ success: true, index });
+                    } else {
+                        console.warn(`Failed to load image: ${url}`);
+                        resolve({ success: false, index });
+                    }
+                });
+
+            // Safety timeout
+            setTimeout(() => resolve({ success: false, index }), 8000);
         });
 
         this.imageCache.set(index, promise);
         return promise;
     }
 
-    preloadAdjacentPages(currentIndex) {
-        // Preload current page and adjacent pages within range
-        const start = Math.max(0, currentIndex - this.preloadRange);
-        const end = Math.min(this.photos.length - 1, currentIndex + this.preloadRange);
+    preloadAdjacentPages(currentIndex, direction = this.lastFlipDirection) {
+        // Bias preloading heavily in the direction of travel
+        const lookAhead = 6;
+        const lookBehind = 2;
+        const ahead = direction >= 0 ? lookAhead : lookBehind;
+        const behind = direction >= 0 ? lookBehind : lookAhead;
+
+        const start = Math.max(0, currentIndex - behind);
+        const end = Math.min(this.photos.length - 1, currentIndex + ahead);
         
         for (let i = start; i <= end; i++) {
             if (!this.imageCache.has(i)) {
@@ -170,11 +172,13 @@ class PhotoFlipbook {
         this.photos.forEach((photo, index) => {
             const pageDiv = document.createElement('div');
             pageDiv.className = 'page';
-            // Use eager loading for first 5 images, lazy for rest
-            const loadingStrategy = index < 5 ? 'eager' : 'lazy';
+            // All pages use eager — lazy loading is unreliable in a flipbook because
+            // hidden/transformed pages never enter the viewport, so the browser
+            // never triggers lazy loads. JS preloading controls the priority instead.
+            const priority = index === 0 ? 'fetchpriority="high"' : '';
             pageDiv.innerHTML = `
                 <div class="page-content">
-                    <img src="${photo.url}" alt="${photo.caption || `Photo ${index + 1}`}" class="page-image" loading="${loadingStrategy}">
+                    <img src="${photo.url}" alt="${photo.caption || `Photo ${index + 1}`}" class="page-image" loading="eager" ${priority}>
                     ${photo.caption ? `<div class="page-caption">${photo.caption}</div>` : ''}
                 </div>
             `;
@@ -283,13 +287,14 @@ class PhotoFlipbook {
     }
 
     onPageFlip(e) {
-        this.currentPage = e.data;
+        const newPage = e.data;
+        this.lastFlipDirection = newPage >= this.currentPage ? 1 : -1;
+        this.currentPage = newPage;
         this.updatePageCounter();
         this.updateButtons();
         this.updateBookPosition();
         
-        // Preload adjacent pages as user navigates
-        this.preloadAdjacentPages(this.currentPage);
+        this.preloadAdjacentPages(this.currentPage, this.lastFlipDirection);
     }
 
     updateBookPosition() {

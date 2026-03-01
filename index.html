@@ -14,6 +14,11 @@
     <link rel="preload" href="css/style.css" as="style">
     <link rel="preload" href="js/app.js" as="script">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js" as="script" crossorigin>
+
+    <!-- Preload first 3 images so they're ready before JS even runs -->
+    <link rel="preload" href="images/Cover.webp" as="image" fetchpriority="high">
+    <link rel="preload" href="images/image_1.webp" as="image" fetchpriority="high">
+    <link rel="preload" href="images/image_2.webp" as="image" fetchpriority="high">
     
     <title>Photo Flipbook</title>
     <link rel="stylesheet" href="css/style.css">
